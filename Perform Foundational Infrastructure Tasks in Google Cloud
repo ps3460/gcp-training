@@ -21,3 +21,106 @@ curl -sSO https://dl.google.com/cloudagents/add-logging-agent-repo.sh
 sudo bash add-logging-agent-repo.sh
 sudo apt update
 sudo apt-get install google-fluentd
+
+
+#Pub/Sub
+mkdir gcf_hello_world
+cd gcf_hello_world
+cat <<EOF >index.js
+/**
+* Background Cloud Function to be triggered by Pub/Sub.
+* This function is exported by index.js, and executed when
+* the trigger topic receives a message.
+*
+* @param {object} data The event payload.
+* @param {object} context The event metadata.
+*/
+exports.helloWorld = (data, context) => {
+const pubSubMessage = data;
+const name = pubSubMessage.data
+    ? Buffer.from(pubSubMessage.data, 'base64').toString() : "Hello World";
+console.log(`My Cloud Function: ${name}`);
+};
+EOF
+
+
+
+
+#create bucket
+projectID=$(gcloud config list --format 'value(core.project)' 2>/dev/null)
+bucketname="steadnet-test"
+echo $projectID
+echo $bucketname
+
+gsutil mb -p $projectID gs://$bucketname
+
+#Deploy function
+gcloud functions deploy helloWorld \
+  --stage-bucket $bucketname \
+  --trigger-topic hello_world \
+  --runtime nodejs8
+
+
+
+#More Pub/Sub
+gcloud pubsub topics create myTopic
+gcloud pubsub topics create Test1
+gcloud pubsub topics create Test2
+gcloud pubsub topics list
+
+gcloud pubsub topics delete Test1
+gcloud pubsub topics delete Test2
+gcloud pubsub topics list
+
+
+gcloud  pubsub subscriptions create --topic myTopic mySubscription
+gcloud  pubsub subscriptions create --topic myTopic Test1
+gcloud  pubsub subscriptions create --topic myTopic Test2
+gcloud pubsub topics list-subscriptions myTopic
+
+
+gcloud pubsub subscriptions delete Test1
+gcloud pubsub subscriptions delete Test2
+gcloud pubsub topics list-subscriptions myTopic
+
+#Pub/Sub Publishing and Pulling a Single Message
+gcloud pubsub topics publish myTopic --message "Hello"
+gcloud pubsub topics publish myTopic --message "Publisher's name is ps3460"
+gcloud pubsub topics publish myTopic --message "Publisher likes to eat chinese"
+gcloud pubsub topics publish myTopic --message "Publisher thinks Pub/Sub is awesome"
+sleep 60
+gcloud pubsub subscriptions pull mySubscription --auto-ack --limit=4
+
+
+
+
+
+
+
+
+
+
+
+#Perform Foundational Infrastructure Tasks in Google Cloud: Challenge Lab
+
+#create bucket
+projectID=$(gcloud config list --format 'value(core.project)' 2>/dev/null)
+bucketname="memories-bucket-78587"
+echo $projectID
+echo $bucketname
+
+gsutil mb -p $projectID gs://$bucketname
+#pubsub
+topicname="memories-topic-964"
+functionname="memories-thumbnail-creator"
+gcloud pubsub topics create $topicname
+
+
+##https://cloudvietnam18.wordpress.com/2020/09/13/answer-qwiklabs-perform-foundational-infrastructure-tasks-in-google-cloud-challenge-lab/
+
+
+
+curl -o map.jpg https://storage.googleapis.com/cloud-training/gsp315/map.jpg
+gsutil cp map.jpg gs://$bucketname
+
+

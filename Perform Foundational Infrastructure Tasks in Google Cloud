@@ -1,0 +1,23 @@
+gsutil cp ada.jpg gs://YOUR-BUCKET-NAME
+
+#file details
+gsutil ls -l gs://YOUR-BUCKET-NAME/ada.jpg
+
+#make public
+gsutil acl ch -u AllUsers:R gs://YOUR-BUCKET-NAME/ada.jpg
+#remove public access
+gsutil acl ch -d AllUsers gs://YOUR-BUCKET-NAME/ada.jpg
+
+
+
+#Monitoring agents
+curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh
+sudo bash add-monitoring-agent-repo.sh
+sudo apt-get update
+sudo apt-get install stackdriver-agent -y 
+
+#Logging Agent
+curl -sSO https://dl.google.com/cloudagents/add-logging-agent-repo.sh
+sudo bash add-logging-agent-repo.sh
+sudo apt update
+sudo apt-get install google-fluentd

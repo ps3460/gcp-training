@@ -1,0 +1,12 @@
+gcloud sql connect  steadnet-sql --user=root
+#enter password
+
+CREATE DATABASE bike;
+USE bike;
+CREATE TABLE london1 (start_station_name VARCHAR(255), num INT);
+USE bike;
+CREATE TABLE london2 (end_station_name VARCHAR(255), num INT);
+SELECT * FROM london1;
+SELECT * FROM london2;
+
+

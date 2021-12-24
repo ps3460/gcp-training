@@ -1,0 +1,58 @@
+#### Part training file
+
+
+gsutil -m cp -r gs://spls/gsp114/sample-app.tar .
+mkdir sample-app
+tar xvf sample-app.tar -C ./sample-app
+cd sample-app
+git config --global user.email "$(gcloud config get-value core/account)"
+git config --global user.name "[USERNAME]"
+git init
+git add .
+git commit -m "Initial commit"
+gcloud source repos create sample-app
+
+
+
+git config credential.helper gcloud.sh
+export PROJECT=$(gcloud info --format='value(config.project)')
+git remote add origin https://source.developers.google.com/p/$PROJECT/r/sample-app
+git push origin master
+
+
+
+
+
+
+
+
+
+
+
+
+export PROJECT=$(gcloud info --format='value(config.project)')
+gsutil mb -l us-central1 gs://$PROJECT-kubernetes-manifests
+gsutil versioning set on gs://$PROJECT-kubernetes-manifests
+sed -i s/PROJECT/$PROJECT/g k8s/deployments/*
+git commit -a -m "Set project ID"
+git tag v1.0.0
+git push --tags
+
+
+
+
+
+
+
+
+curl -LO https://storage.googleapis.com/spinnaker-artifacts/spin/1.14.0/linux/amd64/spin
+chmod +x spin
+./spin application save --application-name sample \
+                        --owner-email "$(gcloud config get-value core/account)" \
+                        --cloud-providers kubernetes \
+                        --gate-endpoint http://localhost:8080/gate
+                        
+export PROJECT=$(gcloud info --format='value(config.project)')
+sed s/PROJECT/$PROJECT/g spinnaker/pipeline-deploy.json > pipeline.json
+./spin pipeline save --gate-endpoint http://localhost:8080/gate -f pipeline.json
+
